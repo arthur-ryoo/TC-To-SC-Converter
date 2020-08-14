@@ -5,7 +5,10 @@ import './App.css';
 function App() {
   const [fileParsingName, setFileParsingName] = useState('');
   const [downloadUrl, setDownloadUrl] = useState();
-
+  const [url2, setUrl2] = useState([]);
+  let url = '';
+  let test = 'test';
+  let name = '';
   const translateGenerically = async (file) => {
     setFileParsingName(file.name);
     const text = await file.text();
@@ -14,20 +17,53 @@ function App() {
       type: 'text/plain',
     });
     const downloadUrl = URL.createObjectURL(blob);
+    url = downloadUrl;
+    name = file.name;
     setDownloadUrl(downloadUrl);
   };
 
   const getFileName = () => {
-    const pieces = fileParsingName.split('.');
+    const pieces = name.split('.');
     if (!pieces.length) {
-      return fileParsingName;
+      return name;
     }
     const extension = pieces[pieces.length - 1];
-    const baseName = fileParsingName.slice(
-      0,
-      fileParsingName.length - extension.length
-    );
+    const baseName = name.slice(0, name.length - extension.length);
     return `${baseName}${extension}`;
+  };
+
+  let links = [];
+
+  function timeout(delay) {
+    return new Promise((res) => setTimeout(res, delay));
+  }
+
+  const handleOnChange = async (event) => {
+    if (!event.target.files || event.target.files.length === 0) {
+      return;
+    }
+    let filesArray = [];
+    for (let i = 0; i < event.target.files.length; i++) {
+      filesArray.push(event.target.files[i]);
+    }
+    let num = 1;
+    filesArray.forEach(async (item) => {
+      await translateGenerically(item);
+
+      if (url) {
+        links.push(
+          <div key={num}>
+            {num}
+            <a href={url} download={getFileName()}>
+              {`Download Result - ${getFileName()}`}
+            </a>
+          </div>
+        );
+        num = num + 1;
+      }
+    });
+    await timeout(1000);
+    setUrl2(links);
   };
 
   return (
@@ -41,19 +77,15 @@ function App() {
         <input
           type="file"
           multiple
-          onChange={(event) => {
-            if (!event.target.files || event.target.files.length === 0) {
-              return;
-            }
-            translateGenerically(event.target.files[0]);
-          }}
+          onChange={(event) => handleOnChange(event)}
         />
         <div>
-          {downloadUrl ? (
+          {url2}
+          {/* {downloadUrl ? (
             <a href={downloadUrl} download={getFileName()}>
               {`Download Result - ${getFileName()}`}
             </a>
-          ) : null}
+          ) : null} */}
         </div>
       </div>
     </div>
