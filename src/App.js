@@ -7,7 +7,6 @@ function App() {
   const [downloadUrl, setDownloadUrl] = useState();
   const [url2, setUrl2] = useState([]);
   let url = '';
-  let test = 'test';
   let name = '';
   const translateGenerically = async (file) => {
     setFileParsingName(file.name);
