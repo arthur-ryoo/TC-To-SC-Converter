@@ -1,43 +1,52 @@
-import React, { useState, useEffect } from 'react';
-import { sify } from 'chinese-conv';
-import './App.css';
+import React, { useState, useEffect } from "react";
+import { sify } from "chinese-conv";
+import "./App.css";
 
 function App() {
-  const [fileParsingName, setFileParsingName] = useState('');
+  const [fileParsingName, setFileParsingName] = useState("");
   const [downloadUrl, setDownloadUrl] = useState();
-  const [url2, setUrl2] = useState([]);
-  let url = '';
-  let name = '';
-  const translateGenerically = async (file) => {
-    setFileParsingName(file.name);
+  const [linkArray, setLinkArray] = useState([]);
+
+  useEffect(() => {
+    if (downloadUrl)
+      setLinkArray(linkArray.concat(
+        <div>
+          <a href={downloadUrl} download={getFileName()}>
+            {`Download Result - ${getFileName()}`}
+          </a>
+        </div>
+      )
+      )
+  }, [downloadUrl]);
+
+  const translateGenerically = async file => {
+
     const text = await file.text();
     const translatedText = sify(text);
     const blob = new Blob([translatedText], {
-      type: 'text/plain',
+      type: "text/plain"
     });
     const downloadUrl = URL.createObjectURL(blob);
-    url = downloadUrl;
-    name = file.name;
+    setFileParsingName(file.name);
     setDownloadUrl(downloadUrl);
+
   };
 
   const getFileName = () => {
-    const pieces = name.split('.');
+    const pieces = fileParsingName.split(".");
     if (!pieces.length) {
-      return name;
+      return fileParsingName;
     }
     const extension = pieces[pieces.length - 1];
-    const baseName = name.slice(0, name.length - extension.length);
+    const baseName = fileParsingName.slice(
+      0,
+      fileParsingName.length - extension.length
+    );
     return `${baseName}${extension}`;
   };
 
-  let links = [];
 
-  function timeout(delay) {
-    return new Promise((res) => setTimeout(res, delay));
-  }
-
-  const handleOnChange = async (event) => {
+  const handleOnChange = (event) => {
     if (!event.target.files || event.target.files.length === 0) {
       return;
     }
@@ -45,25 +54,12 @@ function App() {
     for (let i = 0; i < event.target.files.length; i++) {
       filesArray.push(event.target.files[i]);
     }
-    let num = 1;
+
     filesArray.forEach(async (item) => {
       await translateGenerically(item);
+    })
+  }
 
-      if (url) {
-        links.push(
-          <div key={num}>
-            {num}
-            <a href={url} download={getFileName()}>
-              {`Download Result - ${getFileName()}`}
-            </a>
-          </div>
-        );
-        num = num + 1;
-      }
-    });
-    await timeout(1000);
-    setUrl2(links);
-  };
 
   return (
     <div className="App">
@@ -75,16 +71,11 @@ function App() {
         </p>
         <input
           type="file"
-          multiple
           onChange={(event) => handleOnChange(event)}
+          multiple
         />
         <div>
-          {url2}
-          {/* {downloadUrl ? (
-            <a href={downloadUrl} download={getFileName()}>
-              {`Download Result - ${getFileName()}`}
-            </a>
-          ) : null} */}
+          {linkArray}
         </div>
       </div>
     </div>
